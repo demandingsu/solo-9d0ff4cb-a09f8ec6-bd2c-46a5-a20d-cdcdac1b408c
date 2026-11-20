@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}双分室合库 · 隔声试验数据交付复核{% endblock %}
+{% block content %}
+<h2>双分室隔声试验合库工作台</h2>
+<p class="muted"><a href="/">← 返回单室子库导出工具</a></p>
+
+{% if error %}<p class="err">操作被拒收：{{ error }}</p>{% endif %}
+
+{% if not status.initialized %}
+<p class="warn">合库尚未建立。请同时选择甲、乙两份采用项目示例表结构（groups / calibrations / tests / readings 四表）的 SQLite 子库后首次合库。</p>
+<form method="post" action="/merge/init" enctype="multipart/form-data">
+  <fieldset>
+    <legend>首次合库（两份必须同时上传）</legend>
+    <p><label>甲分室子库：<input type="file" name="jia_file" accept=".db,.sqlite,.sqlite3" required></label></p>
+    <p><label>乙分室子库：<input type="file" name="yi_file" accept=".db,.sqlite,.sqlite3" required></label></p>
+    <button type="submit" class="primary">上传并建立合库</button>
+  </fieldset>
+</form>
+{% else %}
+<p class="ok">合库已建立。可下载当前合库，或单独替换任一分室的子库；换库失败时当前合库与编号对照保持原样。</p>
+
+<h3>当前分室状态</h3>
+<table>
+  <tr><th>分室</th><th>来源文件</th><th>最近更新</th>
+      <th>groups</th><th>calibrations</th><th>tests</th><th>readings</th></tr>
+  {% for b in branches %}
+  {% set meta = status.metas.get(b) %}
+  <tr>
+    <td>{{ branch_labels[b] }}（{{ b }}）</td>
+    <td>{{ meta.source_name if meta else "—" }}</td>
+    <td>{{ meta.updated_at if meta else "—" }}</td>
+    {% for t in tables %}
+    <td>{{ status.counts.get(b, {}).get(t, 0) }}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+
+<p>
+  <a class="btn" href="/merge/download">下载当前合库 merged.db</a>
+  <a class="btn" href="/merge/mapping">查看编号对照</a>
+</p>
+
+<h3>单独换库</h3>
+{% for b in branches %}
+<fieldset>
+  <legend>替换{{ branch_labels[b] }}分室子库</legend>
+  <form method="post" action="/merge/replace/{{ b }}" enctype="multipart/form-data">
+    <p><input type="file" name="file" accept=".db,.sqlite,.sqlite3" required>
+       <button type="submit" class="primary">替换{{ branch_labels[b] }}库</button></p>
+  </form>
+</fieldset>
+{% endfor %}
+<p class="muted">
+  规则：记录撤下后从数据表移除，编号对照保留（状态 withdrawn）；补回的记录沿用原合库编号，
+  该编号不会转给其他记录；新版存在悬空引用时列出相关编号并整份拒收。
+</p>
+{% endif %}
+{% endblock %}

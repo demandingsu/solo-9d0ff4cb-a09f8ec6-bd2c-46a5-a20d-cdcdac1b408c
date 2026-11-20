@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}编号对照 · 双分室合库{% endblock %}
+{% block content %}
+<h2>合库编号对照</h2>
+<p class="muted">
+  <a href="/merge">← 返回合库工作台</a> ｜
+  <a href="/merge/download">下载当前合库 merged.db</a>
+</p>
+
+<form method="get" action="/merge/mapping">
+  <label>分室：
+    <select name="branch">
+      <option value="" {% if not filter_branch %}selected{% endif %}>全部</option>
+      {% for b in branches %}
+      <option value="{{ b }}" {% if filter_branch == b %}selected{% endif %}>{{ branch_labels[b] }}（{{ b }}）</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>表：
+    <select name="table">
+      <option value="" {% if not filter_table %}selected{% endif %}>全部</option>
+      {% for t in tables %}
+      <option value="{{ t }}" {% if filter_table == t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">筛选</button>
+</form>
+
+<table>
+  <tr><th>分室</th><th>表</th><th>原编号</th><th>合库编号</th><th>状态</th></tr>
+  {% for r in mapping %}
+  <tr {% if r.status == 'withdrawn' %}style="color:#999"{% endif %}>
+    <td>{{ branch_labels[r.branch] }}（{{ r.branch }}）</td>
+    <td>{{ r.table_name }}</td>
+    <td>{{ r.original_id }}</td>
+    <td>{{ r.merged_id }}</td>
+    <td>{% if r.status == "withdrawn" %}已撤下{% else %}在库{% endif %}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5" class="muted">无对照记录。</td></tr>
+  {% endfor %}
+</table>
+<p class="muted">
+  已撤下的记录不在合库数据表中，但对照永久保留；日后补回时沿用原合库编号，
+  且该编号不会分配给其他记录。
+</p>
+{% endblock %}

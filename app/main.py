@@ -17,6 +17,8 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from .core import build_subset, load_model, resolve, validate_schema
+from .merge import MergeStore
+from .merge_web import router as merge_router
 
 DATA_DIR = os.environ.get("DATA_DIR", "./data")
 MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", "200"))
@@ -25,6 +27,13 @@ app = FastAPI(title="隔声试验数据交付复核")
 templates = Jinja2Templates(
     directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 )
+
+# 合库工作区：状态全部落在 DATA_DIR/merge，重启不丢
+os.makedirs(DATA_DIR, exist_ok=True)
+app.state.templates = templates
+app.state.max_upload_mb = MAX_UPLOAD_MB
+app.state.merge_store = MergeStore(DATA_DIR)
+app.include_router(merge_router)
 
 
 @dataclass

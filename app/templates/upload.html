@@ -2,6 +2,7 @@
 {% block title %}上传数据库 · 隔声试验数据交付复核{% endblock %}
 {% block content %}
 <h2>隔声试验数据交付复核 — 上传 SQLite 库</h2>
+<p><a class="btn" href="/merge">双分室合库工作台（甲/乙子库合库、换库与编号对照）→</a></p>
 {% if error %}<p class="err">上传失败：{{ error }}</p>{% endif %}
 <form method="post" action="/upload" enctype="multipart/form-data">
   <p><input type="file" name="file" accept=".db,.sqlite,.sqlite3" required>
